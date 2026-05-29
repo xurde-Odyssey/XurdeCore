@@ -34,9 +34,12 @@ function Sidebar({ activePage, onPageChange }: SidebarProps) {
   return (
     <aside className="flex h-screen w-72 shrink-0 flex-col border-r border-slate-200 bg-white px-5 py-6">
       <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-core-accent">
-          PersonalCore
-        </p>
+        <div className="flex items-center gap-3">
+          <img src="/icons/logo.svg" alt="XurdeCore logo" className="h-10 w-10 rounded-xl" />
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-core-accent">
+            XurdeCore
+          </p>
+        </div>
         <h1 className="mt-2 text-2xl font-bold text-core-ink">Development Hub</h1>
       </div>
 

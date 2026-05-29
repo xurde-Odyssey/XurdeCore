@@ -1,3 +1,3 @@
 fn main() {
-    personalcore_lib::run();
+    xurdecore_lib::run();
 }

@@ -59,7 +59,7 @@ function Settings() {
 
   return (
     <div>
-      <PageHeader title="Settings" description="Adjust PersonalCore to match how you work." />
+      <PageHeader title="Settings" description="Adjust XurdeCore to match how you work." />
 
       <div className="grid min-h-[620px] gap-6 lg:grid-cols-[240px_1fr]">
         <aside className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
@@ -92,7 +92,7 @@ function Settings() {
           <div className="mt-6">
             {selectedSection === "General" && (
               <div className="grid gap-4">
-                <SettingsCard title="App Theme" description="Choose how PersonalCore should look.">
+                <SettingsCard title="App Theme" description="Choose how XurdeCore should look.">
                   <SegmentedOptions
                     options={["Light", "Dark", "System"]}
                     selected={theme}
@@ -102,7 +102,7 @@ function Settings() {
 
                 <SettingsCard
                   title="Launch at Login"
-                  description="Open PersonalCore automatically when your desktop starts."
+                  description="Open XurdeCore automatically when your desktop starts."
                 >
                   <Toggle checked={launchAtLogin} onChange={setLaunchAtLogin} />
                 </SettingsCard>
@@ -275,7 +275,7 @@ function Settings() {
                 </p>
                 <h3 className="mt-3 text-2xl font-bold text-core-ink">Not connected</h3>
                 <p className="mt-3 text-sm leading-6 text-core-muted">
-                  Cloud Sync will connect PersonalCore to Supabase later. This screen is only a UI
+                  Cloud Sync will connect XurdeCore to Supabase later. This screen is only a UI
                   placeholder for now.
                 </p>
 
@@ -460,7 +460,7 @@ function getSectionDescription(section: SettingsSection) {
     case "Notifications":
       return "Prepare reminder preferences before native notifications are connected.";
     case "Personalization":
-      return "Shape the tone and messages PersonalCore uses in your workflow.";
+      return "Shape the tone and messages XurdeCore uses in your workflow.";
     case "Data & Backup":
       return "Manage local data actions and backup readiness.";
     case "Cloud Sync":

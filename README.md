@@ -1,6 +1,6 @@
-# PersonalCore
+# XurdeCore
 
-PersonalCore is a Tauri + React + TypeScript desktop app foundation for personal development tracking on macOS.
+XurdeCore is a Tauri + React + TypeScript desktop app foundation for personal development tracking on macOS.
 
 ## Stack
 

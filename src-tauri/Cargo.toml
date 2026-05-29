@@ -1,12 +1,12 @@
 [package]
-name = "personalcore"
+name = "xurdecore"
 version = "0.1.0"
-description = "PersonalCore desktop app"
-authors = ["PersonalCore"]
+description = "XurdeCore desktop app"
+authors = ["XurdeCore"]
 edition = "2021"
 
 [lib]
-name = "personalcore_lib"
+name = "xurdecore_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

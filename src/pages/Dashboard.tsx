@@ -42,19 +42,19 @@ interface ZenQuoteResponse {
 const fallbackQuotes = [
   {
     quote: "Small actions repeated daily become identity.",
-    author: "PersonalCore",
+    author: "XurdeCore",
   },
   {
     quote: "Discipline is choosing what matters over what is easy.",
-    author: "PersonalCore",
+    author: "XurdeCore",
   },
   {
     quote: "Win the day before the day controls you.",
-    author: "PersonalCore",
+    author: "XurdeCore",
   },
   {
     quote: "Progress is built in quiet, repeated effort.",
-    author: "PersonalCore",
+    author: "XurdeCore",
   },
 ];
 
