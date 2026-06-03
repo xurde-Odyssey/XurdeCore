@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PageHeader from "../components/PageHeader";
+import { useToast } from "../context/ToastContext";
 
 type SettingsSection =
   | "General"
@@ -33,6 +34,7 @@ const accentColors = [
 ];
 
 function Settings() {
+  const { showToast } = useToast();
   const [selectedSection, setSelectedSection] = useState<SettingsSection>("General");
   const [theme, setTheme] = useState<AppTheme>("System");
   const [launchAtLogin, setLaunchAtLogin] = useState(false);
@@ -56,6 +58,15 @@ function Settings() {
   const [dailyMotivationMessage, setDailyMotivationMessage] = useState(
     "Stay consistent today and make tomorrow easier.",
   );
+
+  function showSettingsUpdated() {
+    showToast("success", "Settings updated", "Your preferences have been saved.");
+  }
+
+  function updateSetting<T>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) {
+    setter(value);
+    showSettingsUpdated();
+  }
 
   return (
     <div>
@@ -96,7 +107,7 @@ function Settings() {
                   <SegmentedOptions
                     options={["Light", "Dark", "System"]}
                     selected={theme}
-                    onSelect={(value) => setTheme(value as AppTheme)}
+                    onSelect={(value) => updateSetting(setTheme, value as AppTheme)}
                   />
                 </SettingsCard>
 
@@ -104,13 +115,16 @@ function Settings() {
                   title="Launch at Login"
                   description="Open XurdeCore automatically when your desktop starts."
                 >
-                  <Toggle checked={launchAtLogin} onChange={setLaunchAtLogin} />
+                  <Toggle
+                    checked={launchAtLogin}
+                    onChange={(value) => updateSetting(setLaunchAtLogin, value)}
+                  />
                 </SettingsCard>
 
                 <SettingsCard title="Language" description="Choose the app display language.">
                   <select
                     value={language}
-                    onChange={(event) => setLanguage(event.target.value)}
+                    onChange={(event) => updateSetting(setLanguage, event.target.value)}
                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-core-accent focus:ring-2 focus:ring-blue-100 sm:w-64"
                   >
                     <option>English</option>
@@ -131,6 +145,7 @@ function Settings() {
                 </div>
                 <button
                   type="button"
+                  onClick={showSettingsUpdated}
                   className="mt-5 rounded-lg bg-core-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
                 >
                   Save Profile
@@ -144,7 +159,7 @@ function Settings() {
                   <SegmentedOptions
                     options={["Light", "Dark", "System"]}
                     selected={theme}
-                    onSelect={(value) => setTheme(value as AppTheme)}
+                    onSelect={(value) => updateSetting(setTheme, value as AppTheme)}
                   />
                 </SettingsCard>
 
@@ -152,14 +167,17 @@ function Settings() {
                   title="Compact Mode"
                   description="Use tighter spacing for denser dashboard views."
                 >
-                  <Toggle checked={compactMode} onChange={setCompactMode} />
+                  <Toggle
+                    checked={compactMode}
+                    onChange={(value) => updateSetting(setCompactMode, value)}
+                  />
                 </SettingsCard>
 
                 <SettingsCard title="Sidebar Style" description="Control the app sidebar density.">
                   <SegmentedOptions
                     options={["Comfortable", "Compact", "Expanded"]}
                     selected={sidebarStyle}
-                    onSelect={(value) => setSidebarStyle(value as SidebarStyle)}
+                    onSelect={(value) => updateSetting(setSidebarStyle, value as SidebarStyle)}
                   />
                 </SettingsCard>
 
@@ -169,7 +187,7 @@ function Settings() {
                       <button
                         key={color.value}
                         type="button"
-                        onClick={() => setAccentColor(color.value)}
+                        onClick={() => updateSetting(setAccentColor, color.value)}
                         className={`h-9 w-9 rounded-full border-4 transition ${color.className} ${
                           accentColor === color.value
                             ? "border-slate-900"
@@ -189,29 +207,43 @@ function Settings() {
                   title="Enable Notifications"
                   description="Turn local reminder alerts on or off."
                 >
-                  <Toggle checked={notificationsEnabled} onChange={setNotificationsEnabled} />
+                  <Toggle
+                    checked={notificationsEnabled}
+                    onChange={(value) => updateSetting(setNotificationsEnabled, value)}
+                  />
                 </SettingsCard>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <TimeCard
                     label="Daily check-in reminder time"
                     value={dailyCheckInTime}
-                    onChange={setDailyCheckInTime}
+                    onChange={(value) => updateSetting(setDailyCheckInTime, value)}
                   />
                   <TimeCard
                     label="Habit reminder time"
                     value={habitReminderTime}
-                    onChange={setHabitReminderTime}
+                    onChange={(value) => updateSetting(setHabitReminderTime, value)}
                   />
-                  <TimeCard label="Quiet hours start" value={quietStart} onChange={setQuietStart} />
-                  <TimeCard label="Quiet hours end" value={quietEnd} onChange={setQuietEnd} />
+                  <TimeCard
+                    label="Quiet hours start"
+                    value={quietStart}
+                    onChange={(value) => updateSetting(setQuietStart, value)}
+                  />
+                  <TimeCard
+                    label="Quiet hours end"
+                    value={quietEnd}
+                    onChange={(value) => updateSetting(setQuietEnd, value)}
+                  />
                 </div>
 
                 <SettingsCard
                   title="Weekend Reminders"
                   description="Keep reminders active on Saturday and Sunday."
                 >
-                  <Toggle checked={weekendReminders} onChange={setWeekendReminders} />
+                  <Toggle
+                    checked={weekendReminders}
+                    onChange={(value) => updateSetting(setWeekendReminders, value)}
+                  />
                 </SettingsCard>
               </div>
             )}
@@ -225,7 +257,7 @@ function Settings() {
                   <SegmentedOptions
                     options={["Friendly", "Strict", "Motivational", "Minimal", "Funny"]}
                     selected={reminderTone}
-                    onSelect={(value) => setReminderTone(value as ReminderTone)}
+                    onSelect={(value) => updateSetting(setReminderTone, value as ReminderTone)}
                   />
                 </SettingsCard>
 
@@ -233,11 +265,13 @@ function Settings() {
                   label="Custom reminder message"
                   value={customReminderMessage}
                   onChange={setCustomReminderMessage}
+                  onBlur={showSettingsUpdated}
                 />
                 <TextareaField
                   label="Daily motivation message"
                   value={dailyMotivationMessage}
                   onChange={setDailyMotivationMessage}
+                  onBlur={showSettingsUpdated}
                 />
               </div>
             )}
@@ -419,15 +453,17 @@ type TextareaFieldProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
 };
 
-function TextareaField({ label, value, onChange }: TextareaFieldProps) {
+function TextareaField({ label, value, onChange, onBlur }: TextareaFieldProps) {
   return (
     <label className="block rounded-lg border border-slate-200 bg-slate-50 p-5">
       <span className="text-sm font-semibold text-core-ink">{label}</span>
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
         className="mt-3 min-h-28 w-full resize-none rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm leading-6 outline-none transition focus:border-core-accent focus:ring-2 focus:ring-blue-100"
       />
     </label>

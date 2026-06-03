@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
+import ConfirmDialog from "../components/ConfirmDialog";
 import PageHeader from "../components/PageHeader";
+import { useToast } from "../context/ToastContext";
 
 type HabitCategory = "Fitness" | "Work" | "Learning" | "Health" | "Personal";
 type HabitFrequency = "Daily" | "Weekdays" | "Weekly";
@@ -56,9 +58,12 @@ const emptyForm = {
 };
 
 function Habits() {
+  const { showToast } = useToast();
   const [habits, setHabits] = useState<Habit[]>(initialHabits);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddingHabit, setIsAddingHabit] = useState(false);
+  const [editingHabitId, setEditingHabitId] = useState<number | null>(null);
+  const [habitIdToDelete, setHabitIdToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState(emptyForm);
 
   const filteredHabits = useMemo(() => {
@@ -71,6 +76,32 @@ function Habits() {
     const habitName = formData.name.trim();
 
     if (!habitName) {
+      showToast(
+        "error",
+        "Missing routine name",
+        "Please enter a routine name before saving.",
+      );
+      return;
+    }
+
+    if (editingHabitId !== null) {
+      setHabits((currentHabits) =>
+        currentHabits.map((habit) =>
+          habit.id === editingHabitId
+            ? {
+                ...habit,
+                name: habitName,
+                category: formData.category,
+                frequency: formData.frequency,
+                reminderTime: formData.reminderTime,
+              }
+            : habit,
+        ),
+      );
+      setFormData(emptyForm);
+      setEditingHabitId(null);
+      setIsAddingHabit(false);
+      showToast("success", "Routine updated", "Your routine changes have been saved.");
       return;
     }
 
@@ -87,11 +118,24 @@ function Habits() {
     setHabits((currentHabits) => [newHabit, ...currentHabits]);
     setFormData(emptyForm);
     setIsAddingHabit(false);
+    showToast("success", "Routine created", "Your new routine has been added.");
   }
 
   function handleCancel() {
     setFormData(emptyForm);
+    setEditingHabitId(null);
     setIsAddingHabit(false);
+  }
+
+  function handleStartEdit(habit: Habit) {
+    setFormData({
+      name: habit.name,
+      category: habit.category,
+      frequency: habit.frequency,
+      reminderTime: habit.reminderTime,
+    });
+    setEditingHabitId(habit.id);
+    setIsAddingHabit(true);
   }
 
   function handleMarkDone(id: number) {
@@ -106,10 +150,19 @@ function Habits() {
           : habit,
       ),
     );
+    showToast("success", "Routine completed", "Good job. Keep the streak going.");
   }
 
-  function handleDeleteHabit(id: number) {
-    setHabits((currentHabits) => currentHabits.filter((habit) => habit.id !== id));
+  function confirmDeleteHabit() {
+    if (habitIdToDelete === null) {
+      return;
+    }
+
+    setHabits((currentHabits) =>
+      currentHabits.filter((habit) => habit.id !== habitIdToDelete),
+    );
+    setHabitIdToDelete(null);
+    showToast("warning", "Routine deleted", "The routine has been removed.");
   }
 
   return (
@@ -123,7 +176,11 @@ function Habits() {
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <button
             type="button"
-            onClick={() => setIsAddingHabit(true)}
+            onClick={() => {
+              setFormData(emptyForm);
+              setEditingHabitId(null);
+              setIsAddingHabit(true);
+            }}
             className="rounded-lg bg-core-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             Add Habit
@@ -140,7 +197,9 @@ function Habits() {
 
       {isAddingHabit && (
         <section className="mb-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-core-ink">Add new habit</h2>
+          <h2 className="text-lg font-semibold text-core-ink">
+            {editingHabitId === null ? "Add new habit" : "Edit habit"}
+          </h2>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-4 md:grid-cols-2">
             <label className="block">
@@ -221,7 +280,7 @@ function Habits() {
               onClick={handleSaveHabit}
               className="rounded-lg bg-core-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
-              Save Habit
+              {editingHabitId === null ? "Save Habit" : "Save Changes"}
             </button>
             <button
               type="button"
@@ -282,13 +341,14 @@ function Habits() {
               </button>
               <button
                 type="button"
+                onClick={() => handleStartEdit(habit)}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-core-muted transition hover:border-slate-300 hover:text-core-ink"
               >
                 Edit
               </button>
               <button
                 type="button"
-                onClick={() => handleDeleteHabit(habit.id)}
+                onClick={() => setHabitIdToDelete(habit.id)}
                 className="rounded-lg border border-red-100 px-3 py-2 text-sm font-semibold text-red-600 transition hover:border-red-200 hover:bg-red-50"
               >
                 Delete
@@ -302,6 +362,16 @@ function Habits() {
         <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-core-muted">
           No habits found.
         </div>
+      )}
+
+      {habitIdToDelete !== null && (
+        <ConfirmDialog
+          title="Delete routine?"
+          message="Are you sure you want to delete this?"
+          confirmLabel="Delete routine"
+          onCancel={() => setHabitIdToDelete(null)}
+          onConfirm={confirmDeleteHabit}
+        />
       )}
     </div>
   );

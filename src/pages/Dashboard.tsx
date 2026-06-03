@@ -1,31 +1,6 @@
 import { useMemo, useState } from "react";
-
-interface StatCard {
-  id: number;
-  label: string;
-  value: string;
-  helper: string;
-  icon: string;
-}
-
-interface FocusItem {
-  id: number;
-  name: string;
-  category: string;
-  status: "Done" | "Pending";
-}
-
-interface ReminderItem {
-  id: number;
-  title: string;
-  time: string;
-}
-
-interface WeeklyProgressItem {
-  id: number;
-  label: string;
-  percent: number;
-}
+import type { PageKey } from "../components/Sidebar";
+import { useAppContext } from "../context/AppContext";
 
 interface QuoteState {
   quote: string;
@@ -38,6 +13,10 @@ interface ZenQuoteResponse {
   q: string;
   a: string;
 }
+
+type DashboardProps = {
+  onNavigate: (page: PageKey) => void;
+};
 
 const fallbackQuotes = [
   {
@@ -58,55 +37,6 @@ const fallbackQuotes = [
   },
 ];
 
-const stats: StatCard[] = [
-  {
-    id: 1,
-    label: "Today's Progress",
-    value: "68%",
-    helper: "A steady day in motion",
-    icon: "↗",
-  },
-  {
-    id: 2,
-    label: "Completed Routines",
-    value: "4/6",
-    helper: "Two routines left today",
-    icon: "✓",
-  },
-  {
-    id: 3,
-    label: "Active Reminders",
-    value: "5",
-    helper: "Next reminder at 7:00 AM",
-    icon: "•",
-  },
-  {
-    id: 4,
-    label: "Current Streak",
-    value: "8 days",
-    helper: "Consistency is compounding",
-    icon: "∞",
-  },
-];
-
-const initialFocusItems: FocusItem[] = [
-  { id: 1, name: "Workout", category: "Fitness", status: "Pending" },
-  { id: 2, name: "Code for 1 hour", category: "Work", status: "Done" },
-  { id: 3, name: "Daily planning", category: "Personal", status: "Pending" },
-];
-
-const reminders: ReminderItem[] = [
-  { id: 1, title: "Workout Check", time: "7:00 AM" },
-  { id: 2, title: "Coding Session", time: "8:00 PM" },
-  { id: 3, title: "Plan Tomorrow", time: "10:00 PM" },
-];
-
-const weeklyProgress: WeeklyProgressItem[] = [
-  { id: 1, label: "Routines", percent: 78 },
-  { id: 2, label: "Check-ins", percent: 85 },
-  { id: 3, label: "Focus Time", percent: 62 },
-];
-
 const currentDate = new Date().toLocaleDateString("en-US", {
   weekday: "long",
   month: "long",
@@ -114,8 +44,26 @@ const currentDate = new Date().toLocaleDateString("en-US", {
   year: "numeric",
 });
 
-function Dashboard() {
-  const [focusItems, setFocusItems] = useState<FocusItem[]>(initialFocusItems);
+function formatTime(time: string) {
+  if (!time) {
+    return "";
+  }
+
+  const [hour = 0, minute = 0] = time.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function Dashboard({ onNavigate }: DashboardProps) {
+  const {
+    state: { routines, reminders, checkIns },
+    dispatch,
+  } = useAppContext();
   const [todayQuote, setTodayQuote] = useState<QuoteState>({
     quote: fallbackQuotes[0].quote,
     author: fallbackQuotes[0].author,
@@ -124,17 +72,66 @@ function Dashboard() {
   });
 
   const completedCount = useMemo(() => {
-    return focusItems.filter((item) => item.status === "Done").length;
-  }, [focusItems]);
+    return routines.filter((routine) => routine.status === "Done").length;
+  }, [routines]);
 
-  function toggleFocusItem(id: number) {
-    setFocusItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "Done" ? "Pending" : "Done" }
-          : item,
-      ),
-    );
+  const activeReminders = useMemo(() => {
+    return reminders.filter((reminder) => reminder.isActive);
+  }, [reminders]);
+
+  const upcomingReminders = useMemo(() => {
+    return [...activeReminders].sort((a, b) => a.time.localeCompare(b.time));
+  }, [activeReminders]);
+
+  const progressPercent =
+    routines.length > 0 ? Math.round((completedCount / routines.length) * 100) : 0;
+
+  const highestStreak = routines.reduce(
+    (highest, routine) => Math.max(highest, routine.streak),
+    0,
+  );
+
+  const todayCheckIn = checkIns.find((checkIn) => checkIn.date === currentDate);
+
+  const stats = [
+    {
+      id: 1,
+      label: "Today's Progress",
+      value: `${progressPercent}%`,
+      helper:
+        routines.length > 0
+          ? `${completedCount} of ${routines.length} routines completed`
+          : "Add a routine to start tracking progress",
+      icon: "↗",
+    },
+    {
+      id: 2,
+      label: "Completed Routines",
+      value: `${completedCount}/${routines.length}`,
+      helper: routines.length > 0 ? "Shared routine data" : "No routines yet",
+      icon: "✓",
+    },
+    {
+      id: 3,
+      label: "Active Reminders",
+      value: String(activeReminders.length),
+      helper:
+        upcomingReminders.length > 0
+          ? `Next reminder at ${formatTime(upcomingReminders[0].time)}`
+          : "No active reminders",
+      icon: "•",
+    },
+    {
+      id: 4,
+      label: "Current Streak",
+      value: `${highestStreak} days`,
+      helper: "Highest routine streak",
+      icon: "∞",
+    },
+  ];
+
+  function toggleRoutineStatus(id: string) {
+    dispatch({ type: "TOGGLE_ROUTINE_STATUS", payload: { id } });
   }
 
   function getRandomFallbackQuote() {
@@ -196,6 +193,7 @@ function Dashboard() {
 
         <button
           type="button"
+          onClick={() => onNavigate("habits")}
           className="rounded-lg bg-core-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
         >
           Add Routine
@@ -229,7 +227,7 @@ function Dashboard() {
               <div>
                 <h2 className="text-2xl font-bold text-core-ink">Today&apos;s Focus</h2>
                 <p className="mt-2 text-sm text-core-muted">
-                  {completedCount} of {focusItems.length} focus routines completed.
+                  {completedCount} of {routines.length} focus routines completed.
                 </p>
               </div>
               <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-core-accent">
@@ -238,47 +236,53 @@ function Dashboard() {
             </div>
 
             <div className="mt-5 space-y-3">
-              {focusItems.map((item) => {
-                const isDone = item.status === "Done";
+              {routines.map((routine) => {
+                const isDone = routine.status === "Done";
 
                 return (
                   <div
-                    key={item.id}
+                    key={routine.id}
                     className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
                   >
                     <div className="flex items-center gap-4">
                       <button
                         type="button"
-                        onClick={() => toggleFocusItem(item.id)}
+                        onClick={() => toggleRoutineStatus(routine.id)}
                         className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm font-bold transition ${
                           isDone
                             ? "border-core-success bg-green-50 text-core-success"
                             : "border-slate-300 bg-white text-slate-400 hover:border-core-accent hover:text-core-accent"
                         }`}
-                        aria-label={`Mark ${item.name} ${isDone ? "pending" : "done"}`}
+                        aria-label={`Mark ${routine.name} ${isDone ? "pending" : "done"}`}
                       >
                         {isDone ? "✓" : ""}
                       </button>
                       <div>
-                        <h3 className="font-semibold text-core-ink">{item.name}</h3>
-                        <p className="mt-1 text-sm text-core-muted">{item.category}</p>
+                        <h3 className="font-semibold text-core-ink">{routine.name}</h3>
+                        <p className="mt-1 text-sm text-core-muted">{routine.category}</p>
                       </div>
                     </div>
 
                     <button
                       type="button"
-                      onClick={() => toggleFocusItem(item.id)}
+                      onClick={() => toggleRoutineStatus(routine.id)}
                       className={`rounded-full px-3 py-1 text-xs font-bold transition ${
                         isDone
                           ? "bg-green-50 text-core-success hover:bg-green-100"
                           : "bg-amber-50 text-core-warning hover:bg-amber-100"
                       }`}
                     >
-                      {item.status}
+                      {routine.status}
                     </button>
                   </div>
                 );
               })}
+
+              {routines.length === 0 && (
+                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-core-muted">
+                  No routines yet. Add one to build today&apos;s focus list.
+                </div>
+              )}
             </div>
           </section>
 
@@ -293,20 +297,19 @@ function Dashboard() {
             </div>
 
             <div className="mt-6 space-y-5">
-              {weeklyProgress.map((item) => (
-                <div key={item.id}>
-                  <div className="mb-2 flex items-center justify-between gap-4">
-                    <span className="text-sm font-semibold text-core-ink">{item.label}</span>
-                    <span className="text-sm font-bold text-core-accent">{item.percent}%</span>
-                  </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className="h-full rounded-full bg-core-accent"
-                      style={{ width: `${item.percent}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+              <ProgressBar label="Routines" percent={progressPercent} />
+              <ProgressBar
+                label="Check-ins"
+                percent={Math.min(100, Math.round((checkIns.length / 7) * 100))}
+              />
+              <ProgressBar
+                label="Active reminders"
+                percent={
+                  reminders.length > 0
+                    ? Math.round((activeReminders.length / reminders.length) * 100)
+                    : 0
+                }
+              />
             </div>
           </section>
         </div>
@@ -315,12 +318,16 @@ function Dashboard() {
           <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-bold text-core-ink">Today&apos;s Check-in</h2>
             <div className="mt-5 grid grid-cols-3 gap-3">
-              <Metric label="Mood" value="Good" highlight />
-              <Metric label="Energy" value="Medium" />
-              <Metric label="Productivity" value="4/5" />
+              <Metric label="Mood" value={todayCheckIn?.mood ?? "Not set"} highlight />
+              <Metric label="Energy" value={todayCheckIn?.energy ?? "Not set"} />
+              <Metric
+                label="Productivity"
+                value={todayCheckIn ? `${todayCheckIn.productivity}/5` : "Not set"}
+              />
             </div>
             <button
               type="button"
+              onClick={() => onNavigate("checkIn")}
               className="mt-5 w-full rounded-lg bg-core-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
             >
               Open Check-in
@@ -331,20 +338,26 @@ function Dashboard() {
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-core-ink">Upcoming Reminders</h2>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-core-muted">
-                3 today
+                {upcomingReminders.length} active
               </span>
             </div>
 
             <div className="mt-5 space-y-3">
-              {reminders.map((reminder) => (
+              {upcomingReminders.slice(0, 4).map((reminder) => (
                 <div
                   key={reminder.id}
                   className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
                 >
                   <p className="text-sm font-semibold text-core-ink">{reminder.title}</p>
-                  <p className="text-sm font-bold text-core-accent">{reminder.time}</p>
+                  <p className="text-sm font-bold text-core-accent">{formatTime(reminder.time)}</p>
                 </div>
               ))}
+
+              {upcomingReminders.length === 0 && (
+                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-core-muted">
+                  No active reminders.
+                </div>
+              )}
             </div>
           </section>
 
@@ -355,7 +368,7 @@ function Dashboard() {
             <h2 className="mt-3 text-2xl font-bold leading-tight text-core-ink">
               {todayQuote.quote}
             </h2>
-            <p className="mt-3 text-sm font-semibold text-core-muted">— {todayQuote.author}</p>
+            <p className="mt-3 text-sm font-semibold text-core-muted">- {todayQuote.author}</p>
             {todayQuote.error && (
               <p className="mt-3 rounded-lg border border-blue-100 bg-white px-3 py-2 text-xs font-medium text-core-muted">
                 {todayQuote.error}
@@ -371,6 +384,25 @@ function Dashboard() {
             </button>
           </section>
         </aside>
+      </div>
+    </div>
+  );
+}
+
+type ProgressBarProps = {
+  label: string;
+  percent: number;
+};
+
+function ProgressBar({ label, percent }: ProgressBarProps) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-4">
+        <span className="text-sm font-semibold text-core-ink">{label}</span>
+        <span className="text-sm font-bold text-core-accent">{percent}%</span>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-core-accent" style={{ width: `${percent}%` }} />
       </div>
     </div>
   );

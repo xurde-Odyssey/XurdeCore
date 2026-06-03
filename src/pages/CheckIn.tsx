@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bed, Flame, Frown, Laugh, Meh, Smile, type LucideIcon } from "lucide-react";
+import { useToast } from "../context/ToastContext";
 
 type Mood = "Low" | "Fine" | "Good" | "Great" | "Vibrant";
 type Energy = "High" | "Medium" | "Low";
@@ -59,6 +60,7 @@ function getEnergyFromScore(score: number): Energy {
 }
 
 function CheckIn() {
+  const { showToast } = useToast();
   const [checkInData, setCheckInData] = useState<CheckInData>(initialCheckIn);
   const [savedCheckIn, setSavedCheckIn] = useState<CheckInData | null>(null);
   const [energyScore, setEnergyScore] = useState(7);
@@ -78,6 +80,7 @@ function CheckIn() {
 
   function handleSaveCheckIn() {
     setSavedCheckIn(checkInData);
+    showToast("success", "Check-in saved", "Your daily reflection has been saved.");
   }
 
   function handleReset() {
@@ -85,6 +88,7 @@ function CheckIn() {
     setSavedCheckIn(null);
     setEnergyScore(7);
     setSleptWell(true);
+    showToast("info", "Check-in reset", "The form has been cleared.");
   }
 
   return (

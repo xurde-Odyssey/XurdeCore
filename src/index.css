@@ -3,12 +3,32 @@
 @tailwind utilities;
 
 :root {
-  color: #17202a;
-  background: #f5f7fa;
+  --color-core-ink: 23 32 42;
+  --color-core-muted: 100 116 139;
+  --color-core-panel: 255 255 255;
+  --color-core-soft: 245 247 250;
+  --color-core-accent: 37 99 235;
+  --color-core-success: 22 163 74;
+  --color-core-warning: 217 119 6;
+
+  color: rgb(var(--color-core-ink));
+  background: rgb(var(--color-core-soft));
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-theme="dark"] {
+  --color-core-ink: 226 232 240;
+  --color-core-muted: 148 163 184;
+  --color-core-panel: 15 23 42;
+  --color-core-soft: 2 6 23;
+  --color-core-accent: 96 165 250;
+  --color-core-success: 74 222 128;
+  --color-core-warning: 251 191 36;
+
+  color-scheme: dark;
 }
 
 body {
@@ -16,6 +36,22 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow: hidden;
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-enter {
+  animation: toast-enter 180ms ease-out;
 }
 
 #root {
@@ -26,4 +62,206 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+@layer utilities {
+  :root[data-theme="dark"] .bg-white {
+    background-color: rgb(15 23 42);
+  }
+
+  :root[data-theme="dark"] .bg-slate-50 {
+    background-color: rgb(30 41 59);
+  }
+
+  :root[data-theme="dark"] .bg-slate-100 {
+    background-color: rgb(51 65 85);
+  }
+
+  :root[data-theme="dark"] .bg-slate-200,
+  :root[data-theme="dark"] .bg-slate-300 {
+    background-color: rgb(71 85 105);
+  }
+
+  :root[data-theme="dark"] .bg-blue-50,
+  :root[data-theme="dark"] .bg-blue-100 {
+    background-color: rgb(30 64 175 / 0.28);
+  }
+
+  :root[data-theme="dark"] .bg-indigo-50,
+  :root[data-theme="dark"] .bg-indigo-100 {
+    background-color: rgb(67 56 202 / 0.28);
+  }
+
+  :root[data-theme="dark"] .bg-purple-50 {
+    background-color: rgb(126 34 206 / 0.24);
+  }
+
+  :root[data-theme="dark"] .bg-green-50,
+  :root[data-theme="dark"] .bg-green-100 {
+    background-color: rgb(22 101 52 / 0.28);
+  }
+
+  :root[data-theme="dark"] .bg-amber-50,
+  :root[data-theme="dark"] .bg-amber-100 {
+    background-color: rgb(146 64 14 / 0.28);
+  }
+
+  :root[data-theme="dark"] .bg-red-50 {
+    background-color: rgb(127 29 29 / 0.28);
+  }
+
+  :root[data-theme="dark"] .bg-red-600 {
+    background-color: rgb(220 38 38);
+  }
+
+  :root[data-theme="dark"] .hover\:bg-red-700:hover {
+    background-color: rgb(185 28 28);
+  }
+
+  :root[data-theme="dark"] .bg-core-ink {
+    background-color: rgb(51 65 85);
+  }
+
+  :root[data-theme="dark"] .border-slate-100,
+  :root[data-theme="dark"] .border-slate-200,
+  :root[data-theme="dark"] .border-slate-300 {
+    border-color: rgb(51 65 85);
+  }
+
+  :root[data-theme="dark"] .border-blue-100,
+  :root[data-theme="dark"] .border-blue-200 {
+    border-color: rgb(37 99 235 / 0.45);
+  }
+
+  :root[data-theme="dark"] .border-indigo-100 {
+    border-color: rgb(79 70 229 / 0.45);
+  }
+
+  :root[data-theme="dark"] .border-purple-100 {
+    border-color: rgb(147 51 234 / 0.45);
+  }
+
+  :root[data-theme="dark"] .border-red-100,
+  :root[data-theme="dark"] .border-red-200 {
+    border-color: rgb(153 27 27 / 0.55);
+  }
+
+  :root[data-theme="dark"] .border-white {
+    border-color: rgb(15 23 42);
+  }
+
+  :root[data-theme="dark"] .border-slate-900 {
+    border-color: rgb(226 232 240);
+  }
+
+  :root[data-theme="dark"] .text-slate-400,
+  :root[data-theme="dark"] .text-slate-500,
+  :root[data-theme="dark"] .text-slate-600,
+  :root[data-theme="dark"] .text-slate-700 {
+    color: rgb(148 163 184);
+  }
+
+  :root[data-theme="dark"] .text-indigo-600 {
+    color: rgb(129 140 248);
+  }
+
+  :root[data-theme="dark"] .text-purple-600 {
+    color: rgb(196 181 253);
+  }
+
+  :root[data-theme="dark"] .text-red-600 {
+    color: rgb(248 113 113);
+  }
+
+  :root[data-theme="dark"] .bg-emerald-50 {
+    background-color: rgb(6 78 59 / 0.92);
+  }
+
+  :root[data-theme="dark"] .bg-emerald-100 {
+    background-color: rgb(16 185 129 / 0.18);
+  }
+
+  :root[data-theme="dark"] .bg-amber-100 {
+    background-color: rgb(245 158 11 / 0.18);
+  }
+
+  :root[data-theme="dark"] .bg-red-100 {
+    background-color: rgb(248 113 113 / 0.18);
+  }
+
+  :root[data-theme="dark"] .text-emerald-950,
+  :root[data-theme="dark"] .text-amber-950,
+  :root[data-theme="dark"] .text-red-950,
+  :root[data-theme="dark"] .text-blue-950 {
+    color: rgb(248 250 252);
+  }
+
+  :root[data-theme="dark"] .text-emerald-700 {
+    color: rgb(110 231 183);
+  }
+
+  :root[data-theme="dark"] .text-amber-700 {
+    color: rgb(252 211 77);
+  }
+
+  :root[data-theme="dark"] .text-blue-700 {
+    color: rgb(147 197 253);
+  }
+
+  :root[data-theme="dark"] .placeholder\:text-slate-400::placeholder {
+    color: rgb(100 116 139);
+  }
+
+  :root[data-theme="dark"] input,
+  :root[data-theme="dark"] select,
+  :root[data-theme="dark"] textarea {
+    color: rgb(var(--color-core-ink));
+  }
+
+  :root[data-theme="dark"] .shadow-sm,
+  :root[data-theme="dark"] .shadow,
+  :root[data-theme="dark"] .shadow-md {
+    --tw-shadow-color: rgb(0 0 0 / 0.28);
+    --tw-shadow: var(--tw-shadow-colored);
+  }
+
+  :root[data-theme="dark"] .ring-slate-200 {
+    --tw-ring-color: rgb(51 65 85);
+  }
+
+  :root[data-theme="dark"] .ring-blue-100 {
+    --tw-ring-color: rgb(37 99 235 / 0.35);
+  }
+
+  :root[data-theme="dark"] .hover\:bg-slate-50:hover,
+  :root[data-theme="dark"] .hover\:bg-slate-100:hover,
+  :root[data-theme="dark"] .hover\:bg-white:hover {
+    background-color: rgb(51 65 85);
+  }
+
+  :root[data-theme="dark"] .hover\:bg-slate-200:hover,
+  :root[data-theme="dark"] .hover\:bg-slate-700:hover {
+    background-color: rgb(71 85 105);
+  }
+
+  :root[data-theme="dark"] .hover\:bg-blue-50:hover,
+  :root[data-theme="dark"] .hover\:bg-blue-700:hover {
+    background-color: rgb(37 99 235 / 0.45);
+  }
+
+  :root[data-theme="dark"] .hover\:bg-green-100:hover {
+    background-color: rgb(22 101 52 / 0.42);
+  }
+
+  :root[data-theme="dark"] .hover\:bg-amber-100:hover {
+    background-color: rgb(146 64 14 / 0.42);
+  }
+
+  :root[data-theme="dark"] .hover\:bg-red-50:hover {
+    background-color: rgb(127 29 29 / 0.45);
+  }
+
+  :root[data-theme="dark"] .disabled\:bg-slate-300:disabled {
+    background-color: rgb(51 65 85);
+  }
 }

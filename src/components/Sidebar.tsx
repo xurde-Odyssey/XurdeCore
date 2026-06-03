@@ -4,12 +4,19 @@ import {
   CheckCircle2,
   LayoutDashboard,
   LogOut,
+  PanelsTopLeft,
   Settings,
   User,
   type LucideIcon,
 } from "lucide-react";
 
-export type PageKey = "dashboard" | "habits" | "reminders" | "checkIn" | "settings";
+export type PageKey =
+  | "dashboard"
+  | "habits"
+  | "reminders"
+  | "checkIn"
+  | "workspace"
+  | "settings";
 
 type NavItem = {
   key: PageKey;
@@ -27,6 +34,7 @@ const navItems: NavItem[] = [
   { key: "habits", label: "Routines", icon: CheckCircle2 },
   { key: "reminders", label: "Reminders", icon: Bell },
   { key: "checkIn", label: "Daily Check-in", icon: CalendarCheck },
+  { key: "workspace", label: "Workspace", icon: PanelsTopLeft },
   { key: "settings", label: "Settings", icon: Settings },
 ];
 

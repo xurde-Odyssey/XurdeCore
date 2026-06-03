@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
+import ConfirmDialog from "../components/ConfirmDialog";
 import PageHeader from "../components/PageHeader";
+import { useToast } from "../context/ToastContext";
 
 type ReminderCategory = "Fitness" | "Work" | "Learning" | "Health" | "Personal" | "Business";
 type ReminderRepeat = "None" | "Daily" | "Weekdays" | "Weekly" | "Monthly";
@@ -71,10 +73,13 @@ const emptyForm = {
 };
 
 function Reminders() {
+  const { showToast } = useToast();
   const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [isAddingReminder, setIsAddingReminder] = useState(false);
+  const [editingReminderId, setEditingReminderId] = useState<number | null>(null);
+  const [reminderIdToDelete, setReminderIdToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState(emptyForm);
 
   const filteredReminders = useMemo(() => {
@@ -94,7 +99,36 @@ function Reminders() {
   function handleSaveReminder() {
     const reminderTitle = formData.title.trim();
 
-    if (!reminderTitle) {
+    if (!reminderTitle || !formData.time) {
+      showToast(
+        "error",
+        "Missing reminder details",
+        "Please enter a title and reminder time.",
+      );
+      return;
+    }
+
+    if (editingReminderId !== null) {
+      setReminders((currentReminders) =>
+        currentReminders.map((reminder) =>
+          reminder.id === editingReminderId
+            ? {
+                ...reminder,
+                title: reminderTitle,
+                message: formData.message.trim(),
+                category: formData.category,
+                date: formData.date,
+                time: formData.time,
+                repeat: formData.repeat,
+                isActive: formData.isActive,
+              }
+            : reminder,
+        ),
+      );
+      setFormData(emptyForm);
+      setEditingReminderId(null);
+      setIsAddingReminder(false);
+      showToast("success", "Reminder updated", "Your reminder changes have been saved.");
       return;
     }
 
@@ -112,25 +146,58 @@ function Reminders() {
     setReminders((currentReminders) => [newReminder, ...currentReminders]);
     setFormData(emptyForm);
     setIsAddingReminder(false);
+    showToast("success", "Reminder created", "Your reminder has been added.");
   }
 
   function handleCancel() {
     setFormData(emptyForm);
+    setEditingReminderId(null);
     setIsAddingReminder(false);
   }
 
+  function handleStartEdit(reminder: Reminder) {
+    setFormData({
+      title: reminder.title,
+      message: reminder.message,
+      category: reminder.category,
+      date: reminder.date,
+      time: reminder.time,
+      repeat: reminder.repeat,
+      isActive: reminder.isActive,
+    });
+    setEditingReminderId(reminder.id);
+    setIsAddingReminder(true);
+  }
+
   function handleToggleReminder(id: number) {
+    const reminder = reminders.find((currentReminder) => currentReminder.id === id);
+
+    if (!reminder) {
+      return;
+    }
+
     setReminders((currentReminders) =>
       currentReminders.map((reminder) =>
         reminder.id === id ? { ...reminder, isActive: !reminder.isActive } : reminder,
       ),
     );
+    showToast(
+      "info",
+      reminder.isActive ? "Reminder paused" : "Reminder activated",
+      reminder.isActive ? "This reminder is now inactive." : "This reminder is now active.",
+    );
   }
 
-  function handleDeleteReminder(id: number) {
+  function confirmDeleteReminder() {
+    if (reminderIdToDelete === null) {
+      return;
+    }
+
     setReminders((currentReminders) =>
-      currentReminders.filter((reminder) => reminder.id !== id),
+      currentReminders.filter((reminder) => reminder.id !== reminderIdToDelete),
     );
+    setReminderIdToDelete(null);
+    showToast("warning", "Reminder deleted", "The reminder has been removed.");
   }
 
   return (
@@ -144,7 +211,11 @@ function Reminders() {
         <div className="flex w-full flex-col gap-3 lg:w-auto sm:flex-row">
           <button
             type="button"
-            onClick={() => setIsAddingReminder(true)}
+            onClick={() => {
+              setFormData(emptyForm);
+              setEditingReminderId(null);
+              setIsAddingReminder(true);
+            }}
             className="rounded-lg bg-core-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             Add Reminder
@@ -174,7 +245,9 @@ function Reminders() {
         <section className="mb-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-core-ink">Add new reminder</h2>
+              <h2 className="text-lg font-semibold text-core-ink">
+                {editingReminderId === null ? "Add new reminder" : "Edit reminder"}
+              </h2>
               <p className="mt-1 text-sm text-core-muted">
                 Set a simple local reminder plan. Notifications can be added later.
               </p>
@@ -305,7 +378,7 @@ function Reminders() {
               onClick={handleSaveReminder}
               className="rounded-lg bg-core-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
-              Save Reminder
+              {editingReminderId === null ? "Save Reminder" : "Save Changes"}
             </button>
             <button
               type="button"
@@ -373,13 +446,14 @@ function Reminders() {
               </button>
               <button
                 type="button"
+                onClick={() => handleStartEdit(reminder)}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-core-muted transition hover:border-slate-300 hover:text-core-ink"
               >
                 Edit
               </button>
               <button
                 type="button"
-                onClick={() => handleDeleteReminder(reminder.id)}
+                onClick={() => setReminderIdToDelete(reminder.id)}
                 className="rounded-lg border border-red-100 px-3 py-2 text-sm font-semibold text-red-600 transition hover:border-red-200 hover:bg-red-50"
               >
                 Delete
@@ -396,6 +470,16 @@ function Reminders() {
             Try a different search term or status filter.
           </p>
         </div>
+      )}
+
+      {reminderIdToDelete !== null && (
+        <ConfirmDialog
+          title="Delete reminder?"
+          message="Are you sure you want to delete this?"
+          confirmLabel="Delete reminder"
+          onCancel={() => setReminderIdToDelete(null)}
+          onConfirm={confirmDeleteReminder}
+        />
       )}
     </div>
   );
